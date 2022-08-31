@@ -26,6 +26,7 @@ To do:
         OR auto adjust spacing to ask for hours/days depending on size of request
     3. have start and end date be variables, potentially inputs?
     4. change [5:13] slice and just figure out how to get dates, its ugly
+    5. error handling for failed data retrieval
 '''
 public_client = cbpro.PublicClient()
 
