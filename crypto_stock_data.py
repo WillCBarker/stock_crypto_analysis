@@ -1,5 +1,5 @@
-from coinbase.wallet.client import Client
-from Historic_Crypto import Cryptocurrencies
+#from coinbase.wallet.client import Client
+#from Historic_Crypto import Cryptocurrencies
 import cbpro
 
 import matplotlib as mp
@@ -12,6 +12,9 @@ currency_code = "ETH-USD"
 import yfinance as yf
 
 import pandas as pd
+
+from pandas.tseries.holiday import USFederalHolidayCalendar
+UScal = USFederalHolidayCalendar()
 '''
 Comparing stock and crypto data
     1. Plot stock/crypto historical data of past 30 days (matplotlib)
@@ -21,6 +24,8 @@ To do:
     1. If entire plot is < 24 hours, have each interval only print hours
     2. figure out how to resize graph to acomodate more info 
         OR auto adjust spacing to ask for hours/days depending on size of request
+    3. have start and end date be variables, potentially inputs?
+    4. change [5:13] slice and just figure out how to get dates, its ugly
 '''
 public_client = cbpro.PublicClient()
 
@@ -33,22 +38,38 @@ class stockAnalysis():
         self.__stock_data() 
 
     def __stock_data(self):
-        #data = yf.download("SPY", start="2022-07-01", end="2022-07-31", interval="60m")
-        hist = self.spy.history(start="2022-07-01", end="2022-07-31", interval="1d")
+        hist = self.spy.history(start="2022-06-01", end="2022-07-01", interval="1d")
         self.s_priceList = list(round((((hist["High"]) + (hist["Low"]))/2),2))
-        print("HEY:", len(hist["Close"]))
-        for i in range(1,31):
-            #if saturday/sunday: insert 2 elements, both being the close price from the previous friday at index i and i+1 respectively
+        self.__missing_day_handler(hist)
+        #self.__holiday_check()
+    
+    def __holiday_check(self, date):
+        #Takes date object as paremeter, converting it into a datetime object to check if it's present in the list of holidays for the given time period
+        converted_date = datetime.datetime.combine(date, datetime.time(0,0))
+        holidays = UScal.holidays(start="2022-06-01", end="2022-07-01").to_pydatetime()
+        if converted_date in holidays:
+            print("PRESENT IN HOLIDAYS: ", date)
+            return True
 
-            #index 22 is out of bounds for axis 0 with size 20
+    def __missing_day_handler(self, hist):
+        #Fills in days missing from s_priceList due to markets being closed, catches weekdays and holidays
+        x = 0
+        for i in range(1,31): #days in month, should be dynamic
+            #if saturday/sunday: insert 2 elements, both being the close price from the previous friday at index i and i+1 respectively
             #iterating through a list only consisting of weekdays
-            dayNum = datetime.date(2022, 7, i).weekday()
-            if dayNum == 5:
-                self.s_priceList.insert(i, hist["Close"][i-1])
+            '''
+            Goal: For every day the markets closed, insert the closing price of the last time the market was open into the correct position
+            Problem: hist["Close"] (the dataframe I'm pulling data from) only has weekdays information, so counting up by i (the amount of days in the month)
+                     eventually goes out of bounds, we need a serparate counter to access the correct elements in hist
+            '''
+            date = datetime.date(2022, 6, i)
+            dayNum = date.weekday()
+
+            if (self.__holiday_check(date)) == True or dayNum == 5 or dayNum == 6:
+                self.s_priceList.insert(i, hist["Close"][i-x])
                 i += 1
-            elif dayNum == 6:
-                self.s_priceList.insert(i, hist["Close"][i-1])
-                i += 1
+                x += 1
+
     def get_Stock_Data(self):
         return (self.s_priceList)   
     
@@ -61,7 +82,7 @@ class cryptoAnalysis():
         self.__time_conversion() 
     
     def __crypto_data(self):
-        data = self.pc.get_product_historic_rates("ETH-USD", "2022-07-01", "2022-07-31",86400)
+        data = self.pc.get_product_historic_rates("ETH-USD", "2022-06-01", "2022-06-30",86400)
         for i in data:
             self.c_dateList.append(i[0])
             self.c_priceList.append(round(((i[1] + i[2])/2), 2)) #low & high avg
@@ -104,7 +125,4 @@ class driver():
     def __call_plot(self):
         print(len(self.s_priceList))
         pl = plot(self.c_dateList, self.c_priceList, self.s_priceList)
-        '''
-        NOT READY TO BE PLOTTED YET - make function to account for weekends, change [5:13] slice and just figure out how to get dates, its ugly
-        '''
 d1 = driver()
