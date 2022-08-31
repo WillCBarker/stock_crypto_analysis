@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 import datetime
 
-client = Client("jwmwImpmIziTiwMk", "qngyPmqzWa7EuzscqopbZyGXMLiHBE7s", api_version="2022-08-08")
 currency_code = "ETH-USD"
 
 import yfinance as yf
@@ -22,10 +21,6 @@ To do:
     1. If entire plot is < 24 hours, have each interval only print hours
     2. figure out how to resize graph to acomodate more info 
         OR auto adjust spacing to ask for hours/days depending on size of request
-
-KEY:
-API Key: jwmwImpmIziTiwMk
-API Secret: qngyPmqzWa7EuzscqopbZyGXMLiHBE7s
 '''
 public_client = cbpro.PublicClient()
 
@@ -110,6 +105,6 @@ class driver():
         print(len(self.s_priceList))
         pl = plot(self.c_dateList, self.c_priceList, self.s_priceList)
         '''
-        NOT READY TO BE PLOTTED YET - make function to account for weekends
+        NOT READY TO BE PLOTTED YET - make function to account for weekends, change [5:13] slice and just figure out how to get dates, its ugly
         '''
 d1 = driver()
